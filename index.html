@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Buffer Overflow Challenge</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<style>
+
+:root {
+    --color-primary: #0118d8;
+    --color-secondary: #264eca;
+    --color-dark: #001f3f;
+    --bg: #F7F8FF;
+    --pretendard: "Pretendard";
+    --fira-code: "Fira Code";
+    --color-success: #264eca;
+  }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: var(--pretendard), sans-serif;
+    background: var(--bg);
+    color: var(--color-dark);
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 20px;
+  }
+  .header .goal {
+    font-size: 2rem;
+    color: var(--color-secondary);
+    margin-bottom: 12px;
+    margin-top: 40px;
+    font-weight: 300;
+  }
+  .goal strong{
+    font-weight: 600;
+  }
+  .header h1 {
+    font-size: 5rem;
+    font-weight: 400;
+    letter-spacing: 1rem;
+    color: var(--color-primary);
+    margin-bottom: 60px;
+  }
+  .user-section {
+    display: flex;
+    gap: 60px;
+  }
+  .code h1 {
+    font-family: var(--fira-code);
+    color: var(--color-dark);
+    margin-bottom: 20px;
+  }
+  .user-table {
+    background: #fff;
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 10px 20px rgba(0,0,50,0.05);
+    width: 640px;
+  }
+  .user-table h2 {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .user-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 16px;
+    table-layout: fixed;
+  }
+  .user-table th,
+  .user-table td {
+    text-align: center;
+    padding: 8px 0;
+  }
+  .user-table th {
+    color: var(--color-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--color-primary);
+  }
+  .user-table td {
+    font-size: 1rem;
+    font-weight: 300;
+  }
+  .user-table tr.selected td {
+    background: rgba(1,24,216,0.1);
+  }
+  .user-table tr.selected td:first-child {
+    border-left: 4px solid var(--color-primary);
+    border-radius: 0 8px 8px 0;
+  }
+  .challenge-section {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    flex: 1;
+  }
+  .buffer-grid {
+    background: #fff;
+    padding: 24px;
+    border-radius: 24px;
+    box-shadow: 0 10px 20px rgba(0,0,50,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .labels-top,
+  .name-cells {
+    display: flex;
+    gap: 16px;
+  }
+  .labels-top span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    /* color: var(--color-primary); */
+    color: var(--color-dark);
+    width: 60px;
+    text-align: center;
+  }
+  .name-cells div {
+    width: 60px;
+    height: 60px;
+    background: #fff;
+    border: 2px solid #eef2ff;
+    border-radius: 16px;
+    box-shadow: inset 0 0 8px rgba(2,33,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--color-dark);
+  }
+  .labels-bottom,
+  .level-cells {
+    display: flex;
+    justify-content: flex-start;
+    gap: 16px;
+  }
+  .labels-bottom span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    width: 60px;
+    text-align: center;
+  }
+  .level-cells div {
+    width: 60px;
+    height: 60px;
+    background: #fff;
+    border: 2px solid #eef2ff;
+    border-radius: 16px;
+    box-shadow: inset 0 0 8px rgba(2,33,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--color-dark);
+  }
+  .level-text {
+    font-size: 0.6em;
+    font-weight: 300;
+    margin-left: 4px;
+    color: var(--color-secondary);
+  }
+  .input-section {
+    background: #fff;
+    padding: 24px;
+    border-radius: 24px;
+    box-shadow: 0 10px 20px rgba(0,0,50,0.05);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 700px;
+  }
+  .input-section label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-dark);
+  }
+  .input-section input {
+    flex: 1;
+    height: 56px;
+    padding: 0 20px;
+    border: 1px solid #eef2ff;
+    border-radius: 16px;
+    box-shadow: inset 0 0 8px rgba(2,33,255,0.1);
+    font-size: 1rem;
+    background: #fff;
+    color: var(--color-dark);
+    transition: border 0.2s;
+  }
+  .input-section input:focus {
+    border: 2px solid var(--color-primary);
+    outline: none;
+  }
+  .input-section button {
+    min-width: 120px;
+    height: 56px;
+    background: var(--color-primary);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .input-section button:hover {
+    background: var(--color-secondary);
+  }
+  
+</style>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <p class="goal">
+        Goal : <strong>"admin"</strong> 계정으로 로그인 하고, Level을 <strong>"999"</strong>로 설정하세요!!
+      </p>
+      <h1 id="title">YOU ARE NOT ADMIN</h1>
+    </header>
+
+    <div class="user-section">
+      <section class="user-table">
+        <h2>User Table</h2>
+        <table>
+          <thead>
+            <tr><th>USER</th><th>ID</th><th>LEVEL</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>GUEST</td><td>guest</td><td>0</td></tr>
+            <tr><td>DIMIGOIN1</td><td>pandas</td><td>1</td></tr>
+            <tr><td>DIMIGOIN2</td><td>tuple</td><td>1</td></tr>
+            <tr><td>DIMIGOIN3</td><td>void</td><td>1</td></tr>
+            <tr><td>DIMIGOIN4</td><td>goldleo1</td><td>1</td></tr>
+            <tr><td>ADMIN</td><td>admin</td><td>10</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="challenge-section">
+        <div class="buffer-grid">
+          <div class="labels-top">
+            <span>name[0]</span><span>name[1]</span><span>name[2]</span><span>name[3]</span>
+            <span>name[4]</span><span>name[5]</span><span>name[6]</span><span>name[7]</span>
+          </div>
+          <div class="name-cells">
+            <div data-index="0"></div><div data-index="1"></div>
+            <div data-index="2"></div><div data-index="3"></div>
+            <div data-index="4"></div><div data-index="5"></div>
+            <div data-index="6"></div><div data-index="7"></div>
+          </div>
+          <div class="labels-bottom">
+            <span>level[0]</span><span>level[1]</span><span>level[2]</span>
+          </div>
+          <div class="level-cells">
+            <div data-index="8"></div><div data-index="9"></div><div data-index="10"></div>
+          </div>
+        </div>
+
+        <div class="code">
+          <h1>-> scanf("%s", name);</h1>
+        </div>
+
+        <div class="input-section">
+          <label for="name-input">Input: </label>
+          <input id="name-input" type="text" maxlength="11" autocomplete="off">
+          <button id="submit" type="button">제출</button>
+          <button id="init"  type="reset">초기화</button>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script>
+    const input  = document.getElementById('name-input');
+    const nameC  = document.querySelectorAll('.name-cells div');
+    const lvlC   = document.querySelectorAll('.level-cells div');
+    const submit = document.getElementById('submit');
+    const init   = document.getElementById('init');
+    const title  = document.getElementById('title');
+    const rows   = document.querySelectorAll('.user-table tbody tr');
+    
+    function clearHighlight() {
+      rows.forEach(tr => tr.classList.remove('selected'));
+    }
+    
+    input.addEventListener('input', () => {
+      const v = input.value;
+      nameC.forEach((c,i) => c.textContent = v[i]     || '');
+      lvlC .forEach((c,i) => c.textContent = v[8 + i] || '');
+    });
+    
+    input.addEventListener('focus', () => {
+      input.style.border = '2px solid var(--color-primary)';
+    });
+    input.addEventListener('blur', () => {
+      input.style.border = '1px solid #eef2ff';
+    });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') submit.click();
+    });
+    
+    submit.addEventListener('click', () => {
+      const v           = input.value;
+      const user        = v.substring(0,8).trim()   || '';
+      const inputLevel  = v.substring(8,11).trim();
+      let level;
+    
+      if (inputLevel !== '') {
+        level = inputLevel;
+      } else {
+        level = '-1';
+        rows.forEach(tr => {
+          if (tr.cells[1].textContent === user) {
+            level = tr.cells[2].textContent;
+          }
+        });
+      }
+    
+      title.classList.remove('success');
+  if (user === 'admin' && level === '999') {
+    title.textContent = 'SUCCESS!!';
+    title.classList.add('success');
+  } else {
+    title.innerHTML = `Hello, ${user}<span class="level-text">(level : ${level})</span>`;
+  }
+    
+      clearHighlight();
+      rows.forEach(tr => {
+        if (tr.cells[1].textContent === user) {
+          tr.classList.add('selected');
+        }
+      });
+    });
+    
+    init.addEventListener('click', () => {
+      input.value = '';
+      nameC.forEach(c => c.textContent = '');
+      lvlC.forEach(c => c.textContent = '');
+      title.innerHTML = 'YOU ARE NOT ADMIN';
+      title.style.color = '';
+      clearHighlight();
+    });
+    </script>
+        
+</body>
+</html>
